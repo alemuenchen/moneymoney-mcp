@@ -1,0 +1,67 @@
+{
+  "name": "moneymoney-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for the MoneyMoney macOS banking app. Exposes accounts, transactions, categories, portfolio, and analytics tools to LLM hosts via the Model Context Protocol. macOS-only, single-user, AppleScript-based.",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "moneymoney-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "run.sh",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "SECURITY.md",
+    "CONTRIBUTING.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js",
+    "prepack": "npm run build"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "os": [
+    "darwin"
+  ],
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "moneymoney",
+    "banking",
+    "personal-finance",
+    "macos",
+    "applescript",
+    "claude",
+    "anthropic"
+  ],
+  "license": "MIT",
+  "author": "Alessandro Melazzini",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alemuenchen/moneymoney-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/alemuenchen/moneymoney-mcp/issues"
+  },
+  "homepage": "https://github.com/alemuenchen/moneymoney-mcp#readme",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "moneymoney": "^1.3.0",
+    "plist": "^3.1.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/plist": "^3.0.5",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  }
+}
