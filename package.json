@@ -1,6 +1,6 @@
 {
   "name": "@alemuenchen/moneymoney-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "MCP server for the MoneyMoney macOS banking app. Exposes accounts, transactions, categories, portfolio, and analytics tools to LLM hosts via the Model Context Protocol. macOS-only, single-user, AppleScript-based.",
   "type": "module",
   "main": "dist/index.js",
