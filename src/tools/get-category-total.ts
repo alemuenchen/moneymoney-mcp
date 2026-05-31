@@ -18,8 +18,7 @@ export function registerGetCategoryTotal(server: McpServer): void {
         "currency in totalsByCurrency; the scalar totalAmount/currency are present only when all matching " +
         "transactions share one currency. " +
         "For historical/archive analysis pass include_closed=true (past-year data often lives on now-closed " +
-        "accounts, otherwise old totals are undercounted). On very wide ranges this can fail with a MoneyMoney " +
-        "error; if so, fall back to per-year moneymoney_get_transactions and sum client-side.",
+        "accounts, otherwise old totals are undercounted).",
       inputSchema: z
         .object({
           category_uuid: z.string().optional().describe("UUID of one specific category"),

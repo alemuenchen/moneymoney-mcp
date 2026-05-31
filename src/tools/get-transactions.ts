@@ -22,9 +22,7 @@ export function registerGetTransactions(server: McpServer): void {
         "moneymoney_search_transactions with filters instead. " +
         "HISTORICAL/ARCHIVE ANALYSIS: pass include_closed=true — transactions from past years often live on " +
         "accounts that have since been archived/closed, which the default excludes, so omitting it can " +
-        "drastically undercount older periods. Very large exports (a wide date range over a big account group, " +
-        "especially with resolve_category) may fail with a MoneyMoney error; if so, query a single year and/or " +
-        "a single account at a time and combine the results.",
+        "drastically undercount older periods.",
       inputSchema: z.object({
         from_date: z
           .string()

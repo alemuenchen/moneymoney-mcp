@@ -1,7 +1,6 @@
 import {
   getAccounts,
   getCategories,
-  getTransactions,
   checkDatabaseUnlocked,
   DatabaseLockedError,
   MoneyMoneyError,
@@ -67,10 +66,31 @@ export async function ensureUnlocked(): Promise<void> {
 // portfolio export and a few queries used by new tools).
 // ---------------------------------------------------------------------------
 
-async function tellMoneyMoney<T>(command: string): Promise<T> {
+async function tellMoneyMoney<T>(
+  command: string,
+  options?: { timeoutMs?: number; maxBuffer?: number },
+): Promise<T> {
   const script = `tell application "MoneyMoney"\n${command}\nend tell`;
   logger.debug("tellMoneyMoney", { commandPreview: command.slice(0, 80) });
-  const stdout = await runAppleScript(script);
+  let stdout: string;
+  try {
+    stdout = await runAppleScript(script, options);
+  } catch (err) {
+    // MoneyMoney surfaces a locked database as an AppleScript error. Map it to
+    // DatabaseLockedError so the tool layer classifies it as database_locked
+    // and invalidates the unlock cache. Without this, a database that locks
+    // after the unlock-cache check (TTL still valid) would surface as a
+    // generic applescript_error and the stale cache would keep skipping the
+    // real lock check on retries. Upstream getTransactions did this mapping;
+    // our local export path (and the portfolio path) must do it too.
+    if (
+      err instanceof AppleScriptError &&
+      (err.message.includes("Locked database") || err.stderr.includes("Locked database"))
+    ) {
+      throw new DatabaseLockedError();
+    }
+    throw err;
+  }
   if (!stdout) return undefined as T;
   try {
     return plist.parse(stdout) as T;
@@ -298,9 +318,27 @@ async function _fetchAndFilterTransactions(opts: {
     throw new Error(`to_date (${opts.to}) is before from_date (${opts.from}).`);
   }
 
-  // No `forAccount` passed to upstream — broken on current MoneyMoney
-  // versions. We always fetch the full date window and filter ourselves.
-  const transactions = await getTransactions({ from, to });
+  // Export the full date window ourselves instead of via upstream
+  // `getTransactions`: upstream's runAppleScript caps stdout at 5 MB, so any
+  // window wider than ~1 year (where the full-DB plist crosses 5 MB) fails
+  // with a generic "Unknown error". Our own tellMoneyMoney/runAppleScript uses
+  // a 50 MB buffer and a temp-file invocation, so it handles the whole
+  // catalogue in a single call. We still fetch the full window and filter by
+  // account/category in JS — upstream's `for account` clause is broken on
+  // current MoneyMoney versions.
+  const exportCommand =
+    `export transactions ${clause("from date", from, "from_date")} ` +
+    `${clause("to date", to, "to_date")} as "plist"`;
+  // Generous timeout: a multi-year/full-catalogue export can take longer than
+  // runAppleScript's 30s default. Upstream getTransactions set no timeout at
+  // all; 120s keeps a bound (so a genuinely hung osascript can't hang forever)
+  // while comfortably covering large exports. The 50 MB stdout buffer is the
+  // real size guard.
+  const exportResult = await tellMoneyMoney<{ transactions?: Transaction[] }>(
+    exportCommand,
+    { timeoutMs: 120_000 },
+  );
+  const transactions = exportResult?.transactions ?? [];
 
   const accountHierarchy = await getAccountHierarchy(getAccounts);
   let allowedUuids: Set<string> | null = null;
