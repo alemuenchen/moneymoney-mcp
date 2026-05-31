@@ -16,7 +16,11 @@ export function registerSearchTransactions(server: McpServer): void {
         "matches every category whose path begins with 'Business > ...'). Useful to separate business expenses " +
         "(category_path_prefix='Business') from personal ones (category_path_prefix='Personal') without " +
         "enumerating every UUID. By default excludes closed-archive accounts (include_closed=false). With " +
-        "resolve_category=true (default), each result includes categoryName/categoryPath/categoryRoot.",
+        "resolve_category=true (default), each result includes categoryName/categoryPath/categoryRoot. " +
+        "For historical/archive analysis pass include_closed=true (past-year data often lives on now-closed " +
+        "accounts, otherwise it is undercounted). This tool can fail with a MoneyMoney error on very wide date " +
+        "ranges or whole-subtree category filters; if so, fall back to moneymoney_get_transactions per single " +
+        "year/account and filter client-side.",
       inputSchema: z.object({
         from_date: z.string().regex(ISO_DATE_RE, "must be YYYY-MM-DD").describe("Start date YYYY-MM-DD"),
         to_date: z.string().regex(ISO_DATE_RE, "must be YYYY-MM-DD").optional().describe("End date YYYY-MM-DD; defaults to today"),

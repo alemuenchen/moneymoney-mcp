@@ -16,7 +16,10 @@ export function registerGetCategoryTotal(server: McpServer): void {
         "'Business' for the entire business branch). Path prefix matching is segment-aware. Optionally " +
         "restrict by account_name. Default excludes closed-archive accounts. Totals are reported per " +
         "currency in totalsByCurrency; the scalar totalAmount/currency are present only when all matching " +
-        "transactions share one currency.",
+        "transactions share one currency. " +
+        "For historical/archive analysis pass include_closed=true (past-year data often lives on now-closed " +
+        "accounts, otherwise old totals are undercounted). On very wide ranges this can fail with a MoneyMoney " +
+        "error; if so, fall back to per-year moneymoney_get_transactions and sum client-side.",
       inputSchema: z
         .object({
           category_uuid: z.string().optional().describe("UUID of one specific category"),
